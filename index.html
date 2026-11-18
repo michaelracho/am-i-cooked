@@ -354,17 +354,16 @@
         scale: SC.map(([g, m]) => ({ g, m })),
         groups,
       });
-      const phys = () =>
-        sub("Physics 71", [
-          gp("Long Exams", 60, [it("LE 1", 40), it("LE 2", 40), it("LE 3", 40)]),
-          gp("Final Exam", 20, [it("Final exam", 40)]),
-          gp("Lecture Grade", 20, [it("Lecture grade", 100)]),
+      const blank = () =>
+        sub("New subject", [
+          gp("Exams", 60, [it("Exam 1", 100), it("Exam 2", 100)]),
+          gp("Other", 40, [it("Activities", 100)]),
         ]);
       let D;
       try {
         D = JSON.parse(localStorage.getItem("gp1"));
       } catch (e) {}
-      if (!D || !D.subs || !D.subs.length) D = { cur: null, subs: [phys()] };
+      if (!D || !D.subs || !D.subs.length) D = { cur: null, subs: [blank()] };
       if (!D.subs.some((s) => s.id === D.cur)) D.cur = D.subs[0].id;
       const save = () => {
         try {
@@ -492,8 +491,7 @@
         const grades = S.scale.map((r) => [r.g, fx(r.g)]);
         const total = S.groups.reduce((sum, g) => sum + (+g.w || 0), 0);
         const rescaleNote = total === 100 ? "" : ", so the planner rescales them to 100%";
-        const deleteBtn =
-          D.subs.length > 1 ? '<button class="add" data-a="delsub">Delete this subject</button>' : "";
+        const deleteBtn = '<button class="add" data-a="delsub">Delete this subject</button>';
         $("#setup").innerHTML = `
           <details id="cfg"${setupOpen ? " open" : ""}>
             <summary>Grading system and grade scale</summary>
@@ -661,16 +659,14 @@
         const G = () => S.groups.find((g) => g.id === d.g);
         if (a === "tab") D.cur = d.id;
         else if (a === "addsub") {
-          const s = sub("New subject", [
-            gp("Exams", 60, [it("Exam 1", 100), it("Exam 2", 100)]),
-            gp("Other", 40, [it("Activities", 100)]),
-          ]);
+          const s = blank();
           D.subs.push(s);
           D.cur = s.id;
           setupOpen = true;
         } else if (a === "delsub") {
-          if (D.subs.length < 2 || !confirm("Delete this subject?")) return;
+          if (!confirm("Delete this subject?")) return;
           D.subs = D.subs.filter((x) => x !== S);
+          if (!D.subs.length) D.subs.push(blank());
           D.cur = D.subs[0].id;
         } else if (a === "addgrp") S.groups.push(gp("New group", 10, [it("Item 1", 100)]));
         else if (a === "delgrp") S.groups = S.groups.filter((g) => g.id !== d.g);
