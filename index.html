@@ -505,6 +505,7 @@
         const rescaleNote = total === 100 ? "" : ", so the planner rescales them to 100%";
         const deleteBtn = '<button class="add" data-a="delsub">Delete this subject</button>';
         $("#setup").innerHTML = `
+          <p class="sm" style="margin: 0 0 8px">Need to change your exams? Open the section below to rename them, set their weights and maximum scores, add or remove items, and adjust the grade cutoffs.</p>
           <details id="cfg"${setupOpen ? " open" : ""}>
             <summary>Grading system and grade scale</summary>
             <div class="cfg">
