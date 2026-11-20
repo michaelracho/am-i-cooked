@@ -123,7 +123,7 @@
       }
       .row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 104px 114px;
+        grid-template-columns: minmax(0, 1fr) 104px 104px;
         gap: 8px;
         align-items: center;
         padding: 9px 0;
@@ -323,13 +323,13 @@
   </head>
   <body>
     <div class="wrap">
-      <h1>Am I Cooked?</h1>
-      <p class="lead">
-        Enter what you’ve scored, predict the rest, and see which grades are still within reach.
-      </p>
-      <div class="tabs" id="tabs"></div>
       <main>
         <div>
+          <h1>Am I Cooked?</h1>
+          <p class="lead">
+            Enter what you’ve scored, predict the rest, and see which grades are still within reach.
+          </p>
+          <div class="tabs" id="tabs"></div>
           <div id="setup"></div>
           <div id="inp"></div>
         </div>
@@ -383,6 +383,18 @@
         } catch (e) {}
       };
       const cur = () => D.subs.find((s) => s.id === D.cur);
+      if (D.v !== 2) {
+        // v2: predictions are stored as scores; convert earlier percentage predictions once
+        D.subs.forEach((s) =>
+          s.groups.forEach((g) =>
+            g.items.forEach((i) => {
+              if (i.e !== "") i.e = String(Math.round((+i.e / 100) * (+i.max || 100) * 100) / 100);
+            }),
+          ),
+        );
+        D.v = 2;
+        save();
+      }
       const fx = (n) => (n == null ? "none" : (+n).toFixed(2));
       const sorted = (S) => S.scale.slice().sort((a, b) => b.m - a.m);
       const gradeFor = (S, v) => {
@@ -411,7 +423,7 @@
               s = i.s !== "" ? +i.s : null,
               e = i.e !== "" ? +i.e : null;
             const st = s !== null ? "done" : e !== null ? "est" : "open",
-              p = st === "done" ? (s / mx) * 100 : st === "est" ? e : null;
+              p = st === "done" ? (s / mx) * 100 : st === "est" ? (e / mx) * 100 : null;
             W += w;
             if (p === null) U += w;
             else base += (w * p) / 100;
@@ -433,9 +445,9 @@
             placeholder="of ${+i.max || 100}" value="${esc(i.s)}"
             aria-label="${esc(i.n)} actual score"
             data-t="i" data-g="${g.id}" data-i="${i.id}" data-f="s">
-          <input type="number" inputmode="decimal" min="0" max="100" step="any"
-            placeholder="predicted" value="${esc(i.e)}" id="e${i.id}"
-            aria-label="${esc(i.n)} predicted percentage"
+          <input type="number" inputmode="decimal" min="0" step="any"
+            placeholder="of ${+i.max || 100}" value="${esc(i.e)}" id="e${i.id}"
+            aria-label="${esc(i.n)} predicted score"
             data-t="i" data-g="${g.id}" data-i="${i.id}" data-f="e">
         </div>`;
 
@@ -493,9 +505,9 @@
       function renderInp() {
         const S = cur();
         $("#inp").innerHTML = `
-          <div class="row hd sm"><span></span><span>Actual Score</span><span>Predicted Percentage</span></div>
+          <div class="row hd sm"><span></span><span>Actual Score</span><span>Predicted Score</span></div>
           ${S.groups.map(groupBlock).join("")}
-          <p class="sm">Type your actual score once you have it. Until then, a predicted percentage lets you test what-ifs. Leave both empty on the exams you want the planner to solve for.</p>`;
+          <p class="sm">Type your actual score once you have it. Until then, a predicted score lets you test what-ifs. Leave both empty on the exams you want the planner to solve for.</p>`;
       }
 
       function renderSetup() {
@@ -622,7 +634,7 @@
               x.st === "done"
                 ? x.p.toFixed(1) + "% scored"
                 : x.st === "est"
-                  ? "Predicting " + x.p + "%"
+                  ? "Predicting " + +x.p.toFixed(1) + "%"
                   : "Still open";
           if (e) e.disabled = x.st === "done";
         });
